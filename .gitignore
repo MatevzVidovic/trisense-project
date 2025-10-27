@@ -1,0 +1,5 @@
+./.mypy_cache/
+yolov4-tiny.weights
+**/__pycache__/
+checkpoints/
+outputs/

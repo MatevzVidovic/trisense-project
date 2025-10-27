@@ -1,3 +1,24 @@
+
+# Novel project adaptation
+
+## Commands
+
+conda env update -f conda-gpu.yml
+
+conda activate yolov4-gpu
+
+python save_model.py --weights ./data/yolov4-tiny.weights --model yolov4 --tiny true
+
+python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true
+
+## Limitations
+
+- We use the tiny YOLOv4 model, as the weights for the full model are not available anymore.
+- We run the project on WSL2 18.04.06, as the required CUDA toolkit version works only with Ubuntu 18, 16, and 14.
+- We use tensorflow-gpu==2.4.0 instead of tensorflow-gpu==2.3.0rc0, as the latter is not available via PyPy anymore.
+- We add scipy to the dependencies, as it must have been ommited by mistake in the original project.
+
+
 # yolov4-deepsort
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1zmeSTP3J5zu2d5fHgsQC06DyYEYJFXq1?usp=sharing)
