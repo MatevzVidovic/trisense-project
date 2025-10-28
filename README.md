@@ -18,6 +18,81 @@ python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.a
 - We use tensorflow-gpu==2.4.0 instead of tensorflow-gpu==2.3.0rc0, as the latter is not available via PyPy anymore.
 - We add scipy to the dependencies, as it must have been ommited by mistake in the original project.
 
+## Quick overview of the original project
+
+```plantuml
+
+@startuml
+skinparam componentStyle rectangle
+left to right direction
+
+title Object Tracker main
+
+[main] --> [create encoder ] : 1
+[main] --> [create tracker] : 2
+[main] --> [create infer] : 3
+[main] --> [WhileLoop] : 4
+
+frame "while loop" as WhileLoop {
+[WhileLoop] --> [infer] : 1
+note right of [infer] : (batch_data) -> (bboxes): uses YOLOv4
+[WhileLoop] --> [encoder] : 2
+note right of [encoder] : each bbox gets latent space representation
+[WhileLoop] --> [create Detections objs] : 3
+[WhileLoop] --> [tracker.predict()] : 4
+note right of [tracker.predict()] : Each track has mean (4D pos + 4D vel) and covariance matrix for it (think of it as uncertainty of each dimension for now).    Kalman filter gives next (mean, cov) assuming linear motion of bbox.
+[WhileLoop] --> [tracker.update(detections)] : 5
+
+
+
+@enduml
+```
+
+```plantuml
+
+@startuml
+skinparam componentStyle rectangle
+left to right direction
+
+title tracker.update(detections)
+
+
+[tracker.update(detections)] --> [tracker._match(detections)]
+note right of [tracker._match(detections)] : (tracks, detections) -> (matches, unmatched_tracks, unmatched_detections) : uses IoU distance (Hungarian alg)
+
+[tracker.update(detections)] --> [track updates]
+note right of [track updates]
+For each matched track, Kalman filter corrects (mean, cov) with associated detection bbox. 
+Tentative tracks become confirmed if previously matched enough times.
+
+For each unmatched track, delete if still Tentative or hasn't been matched in a while.
+
+For each unmatched detection, a new track is created (state is set to Tentative).
+end note
+
+}
+@enduml
+
+```
+
+
+```plantuml
+@startuml
+left to right direction
+title Track state machine
+
+[*] --> Tentative : upon first detection
+Tentative --> Confirmed : after enough matches
+
+Tentative --> Deleted : if unmatched even once
+Confirmed --> Deleted : if unmatched for too long
+@enduml
+
+
+```
+
+
+
 
 # yolov4-deepsort
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
