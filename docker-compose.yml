@@ -14,9 +14,16 @@ services:
     tty: true
     stdin_open: true
 
+    environment:
+      DISPLAY: ${DISPLAY}
+      WAYLAND_DISPLAY: ${WAYLAND_DISPLAY}
+      XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR}
+      QT_X11_NO_MITSHM: "1" # disable shared memory of X client and X server. Use port communication.
+
     # Live-edit your code without rebuilding the image
     volumes:
       - .:/workspace:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       # Optionally mount big data/checkpoints separately:
       # - ./data:/data:ro
       # - ./checkpoints:/checkpoints:rw

@@ -16,3 +16,5 @@ python -c "import tensorflow as tf; print(tf.__version__); print(tf.config.list_
 python save_model.py --weights ./data/yolov4-tiny.weights --model yolov4 --tiny true
 
 python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true --dont_show
+
+python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true
