@@ -4,12 +4,13 @@ dependencies:
   - python==3.7
   - pip
   - matplotlib
-  - opencv
+  # - opencv
   - pip:
+    - scipy
+    - tensorflow==2.3.1
     - opencv-python==4.1.1.26
     - lxml
     - tqdm
-    - tensorflow==2.3.0rc0
     - absl-py
     - easydict
     - pillow

@@ -1,0 +1,56 @@
+version: "3.9"
+
+
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.cpu
+      args:
+        ENV_NAME: myenv        # keep in sync with conda-gpu.yml 'name:'
+    image: myproject:cuda10-conda-myenv
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+
+    # Live-edit your code without rebuilding the image
+    volumes:
+      - .:/workspace:rw
+      # Optionally mount big data/checkpoints separately:
+      # - ./data:/data:ro
+      # - ./checkpoints:/checkpoints:rw
+
+    # Enable GPU if your host has NVIDIA toolkit set up
+    # (Docker Desktop + WSL2 or native Linux)
+    gpus: all
+
+    # Start a shell (env auto-activates via /etc/bash.bashrc)
+    command: bash
+
+
+# services:
+#   app:
+#     build:
+#       context: .
+#       dockerfile: docker/Dockerfile.gpu
+#       args:
+#         ENV_NAME: myenv        # keep in sync with conda-gpu.yml 'name:'
+#     image: myproject:cuda10-conda-myenv
+#     working_dir: /workspace
+#     tty: true
+#     stdin_open: true
+
+#     # Live-edit your code without rebuilding the image
+#     volumes:
+#       - .:/workspace:rw
+#       # Optionally mount big data/checkpoints separately:
+#       # - ./data:/data:ro
+#       # - ./checkpoints:/checkpoints:rw
+
+#     # Enable GPU if your host has NVIDIA toolkit set up
+#     # (Docker Desktop + WSL2 or native Linux)
+#     gpus: all
+
+#     # Start a shell (env auto-activates via /etc/bash.bashrc)
+#     command: bash

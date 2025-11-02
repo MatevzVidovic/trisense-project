@@ -14,8 +14,8 @@ python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.a
 ## Limitations
 
 - We use the tiny YOLOv4 model, as the weights for the full model are not available anymore.
-- We run the project on WSL2 18.04.06, as the required CUDA toolkit version works only with Ubuntu 18, 16, and 14.
-- We use tensorflow-gpu==2.4.0 instead of tensorflow-gpu==2.3.0rc0, as the latter is not available via PyPy anymore.
+- The required CUDA toolkit (10.01) works with older graphics cards- we therefore cannot use the GPU approach.
+- We use tensorflow==2.3.1 instead of tensorflow==2.3.0rc0, as the latter is not available via PyPy anymore.
 - We add scipy to the dependencies, as it must have been ommited by mistake in the original project.
 
 ## Quick overview of the original project

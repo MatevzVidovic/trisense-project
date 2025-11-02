@@ -1,0 +1,91 @@
+FROM tensorflow/tensorflow:2.3.1-gpu
+# (Ubuntu 18.04 base + CUDA 10.1 + cuDNN 7 baked in)FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
+
+# ENV DEBIAN_FRONTEND=noninteractive
+# RUN apt-get update && apt-get install -y \
+#     curl ca-certificates bash bzip2 \
+#     build-essential git ffmpeg \
+#     libsm6 libxext6 libgl1 libglib2.0-0 \
+#  && rm -rf /var/lib/apt/lists/*
+
+# remove NVIDIA repos that have old/rotated keys, then apt-get
+RUN set -eux; \
+  rm -f /etc/apt/sources.list.d/cuda*.list /etc/apt/sources.list.d/nvidia*.list || true; \
+  sed -i '/developer.download.nvidia.com/d' /etc/apt/sources.list || true; \
+  apt-get update; \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    curl ca-certificates bash bzip2 \
+    build-essential git ffmpeg \
+    libsm6 libxext6 libgl1 libglib2.0-0; \
+  rm -rf /var/lib/apt/lists/*
+
+
+# # ===== Install Miniconda =====
+# ENV CONDA_DIR=/opt/conda
+# ENV PATH=${CONDA_DIR}/bin:${PATH}
+# RUN curl -fsSL https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
+#  && bash /tmp/miniconda.sh -b -p ${CONDA_DIR} \
+#  && rm -f /tmp/miniconda.sh \
+#  && conda config --system --set channel_priority strict \
+#  && conda install -y -n base -c conda-forge mamba \
+#  && conda clean -ay
+
+# WORKDIR /workspace
+
+# # ===== Cache-friendly env build =====
+# ARG ENV_NAME=myenv
+# COPY conda-gpu.yml /tmp/conda-gpu.yml
+# RUN mamba env create -n "${ENV_NAME}" -f /tmp/conda-gpu.yml \
+#  && conda clean -ay
+
+# # Default env activation
+# SHELL ["bash", "-lc"]
+# RUN echo "conda activate ${ENV_NAME}" >> /etc/bash.bashrc
+# ENV PATH="/opt/conda/envs/${ENV_NAME}/bin:${PATH}"
+
+# ----------------------------
+# -- micromamba (conda-compatible, no glibc issues) --
+# ENV MAMBA_ROOT_PREFIX=/opt/conda
+# # download latest micromamba static tarball and extract the binary
+# RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest \
+#   | tar -xj -C /usr/local/bin --strip-components=1 bin/micromamba
+# # initialize shell hook so "micromamba activate" works in bash
+# RUN micromamba shell init -s bash -p "${MAMBA_ROOT_PREFIX}"
+
+# WORKDIR /workspace
+
+# # ---- cache-friendly env build: copy only the env file first ----
+# ARG ENV_NAME=myenv
+# COPY conda-gpu.yml /tmp/conda-gpu.yml
+# RUN micromamba create -y -n "${ENV_NAME}" -f /tmp/conda-gpu.yml && \
+#     micromamba clean -a -y
+# ----------------------------
+
+# micromamba binary
+RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest \
+  | tar -xj -C /usr/local/bin --strip-components=1 bin/micromamba
+
+ENV MAMBA_ROOT_PREFIX=/opt/conda
+SHELL ["bash","-lc"]
+RUN echo 'export MAMBA_ROOT_PREFIX=/opt/conda' >> /etc/bash.bashrc && \
+    echo 'eval "$(micromamba shell hook -s bash)"' >> /etc/bash.bashrc
+
+ARG ENV_NAME=myenv
+COPY conda-gpu.yml /tmp/conda-gpu.yml
+RUN micromamba create -y -n "${ENV_NAME}" -f /tmp/conda-gpu.yml && \
+    micromamba clean -a -y
+ENV PATH="/opt/conda/envs/${ENV_NAME}/bin:${PATH}"
+
+
+
+
+# default activation for interactive shells; also expose env on PATH
+SHELL ["bash","-lc"]
+RUN echo "micromamba activate ${ENV_NAME}" >> /etc/bash.bashrc
+ENV PATH="${MAMBA_ROOT_PREFIX}/envs/${ENV_NAME}/bin:${PATH}"
+
+# ===== Copy project AFTER env =====
+COPY . .
+
+ENV TF_FORCE_GPU_ALLOW_GROWTH=1
+CMD ["bash"]
