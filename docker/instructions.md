@@ -1,6 +1,8 @@
 
 
 
+rm ./DB/db.sqlite3
+
 # env is cached unless conda-gpu.yml changes
 docker compose build
 
@@ -18,3 +20,4 @@ python save_model.py --weights ./data/yolov4-tiny.weights --model yolov4 --tiny 
 python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true --dont_show
 
 python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true
+

@@ -22,6 +22,7 @@ from tensorflow.compat.v1 import InteractiveSession
 from deep_sort import preprocessing, nn_matching
 from deep_sort.detection import Detection
 from deep_sort.tracker import Tracker
+from DB.detection_store import DetectionStore
 from tools import generate_detections as gdet
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 flags.DEFINE_string('weights', './checkpoints/yolov4-416',
@@ -38,6 +39,10 @@ flags.DEFINE_boolean('dont_show', False, 'dont show video output')
 flags.DEFINE_boolean('info', False, 'show detailed info of tracked objects')
 flags.DEFINE_boolean('count', False, 'count objects being tracked on screen')
 
+
+
+
+
 def main(_argv):
     # Definition of the parameters
     max_cosine_distance = 0.4
@@ -51,6 +56,9 @@ def main(_argv):
     metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
     # initialize tracker
     tracker = Tracker(metric)
+    # initialize the DB
+    store = DetectionStore("DB/db.sqlite3")
+
 
     # load configuration for object detector
     config = ConfigProto()
@@ -199,7 +207,8 @@ def main(_argv):
         # Call the tracker
         tracker.predict()
         tracker.update(detections)
-
+ 
+        store.log_frame(frame_num, w=frame.shape[1], h=frame.shape[0])
         # update tracks
         for track in tracker.tracks:
             if not track.is_confirmed() or track.time_since_update > 1:
@@ -207,13 +216,17 @@ def main(_argv):
             bbox = track.to_tlbr()
             class_name, class_confidence = track.get_class_info()
             
-        # draw bbox on screen
+            # draw bbox on screen
             color = colors[int(track.track_id) % len(colors)]
             color = [i * 255 for i in color]
             title = f"{class_name} - {track.track_id} - P:{class_confidence*100:.1f}%"
             cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), color, 2)
             cv2.rectangle(frame, (int(bbox[0]), int(bbox[1]-30)), (int(bbox[0])+(len(title)*14), int(bbox[1])), color, -1)
             cv2.putText(frame, title,(int(bbox[0]), int(bbox[1]-10)),0, 0.75, (255,255,255),2)
+
+            # store detection to the DB
+            store.log_detection(int(track.track_id), frame_num, class_name,
+                                        class_confidence, int(bbox[2]), int(bbox[0]), int(bbox[3]), int(bbox[1]))
 
         # if enable info flag then print details about each track
             if FLAGS.info:
@@ -232,6 +245,8 @@ def main(_argv):
         if FLAGS.output:
             out.write(result)
         if cv2.waitKey(1) & 0xFF == ord('q'): break
+
+    store.close()
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
