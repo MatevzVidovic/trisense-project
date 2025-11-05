@@ -1,0 +1,6 @@
+name: trisense-webapp
+channels:
+  - defaults
+dependencies:
+  - pip
+prefix: /home/matevz/miniconda3/envs/trisense-webapp

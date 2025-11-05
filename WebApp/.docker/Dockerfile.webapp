@@ -1,0 +1,25 @@
+# Use a lightweight conda-compatible image
+FROM mambaorg/micromamba:1.5-jammy
+
+# Set working directory
+WORKDIR /app
+
+# --- 1) Copy environment file and create conda env
+COPY .conda/environment.yml /tmp/environment.yml
+RUN micromamba create -y -n appenv -f /tmp/environment.yml && \
+    micromamba clean --all --yes
+
+# Ensure micromamba env commands run properly
+SHELL ["/bin/bash", "-lc"]
+
+# --- 2) Copy application code and database
+COPY . /app
+
+# Copy the SQLite database (relative to your project root)
+COPY db.sqlite3 /app/DB/db.sqlite3
+
+# --- 3) Expose FastAPI port
+EXPOSE 8000
+
+# --- 4) Run FastAPI via Uvicorn inside the conda env
+CMD ["micromamba", "run", "-n", "appenv", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
