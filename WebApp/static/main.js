@@ -40,10 +40,10 @@ async function loadRuns() {
       setStatus("No runs found");
       return;
     }
-    runs.forEach(({ run_id, started_at }) => {
+    runs.forEach(({ run_ix, started_at }) => {
       const option = document.createElement("option");
-      option.value = run_id;
-      option.textContent = started_at ? `${run_id} (${started_at})` : run_id;
+      option.value = run_ix;
+      option.textContent = started_at ? `${run_ix} (${started_at})` : run_ix;
       runSelect.appendChild(option);
     });
     runSelect.disabled = false;
@@ -63,11 +63,11 @@ async function loadTracks() {
   setStatus("Loading tracks…");
   try {
     const data = await fetchJSON(`/runs/${runId}/tracks`);
-    if (data.track_ids.length === 0) {
+    if (data.track_ixs.length === 0) {
       setStatus("No tracks in run");
       return;
     }
-    data.track_ids.forEach((trackId) => {
+    data.track_ixs.forEach((trackId) => {
       const option = document.createElement("option");
       option.value = trackId;
       option.textContent = trackId;
