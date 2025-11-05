@@ -3,6 +3,7 @@ yolov4-tiny.weights
 **/__pycache__/
 checkpoints/
 outputs/
+**/node_modules
 
 # SQLite databases
 *.sqlite3
