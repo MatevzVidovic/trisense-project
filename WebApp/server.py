@@ -2,6 +2,8 @@
 # WebApp/server.py
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import sqlite3
 from contextlib import closing
@@ -11,6 +13,10 @@ from pathlib import Path
 DB_PATH = Path(os.getenv("DB_PATH")).resolve()
 
 app = FastAPI()
+
+WEB_DIR = Path(__file__).parent
+STATIC_DIR = WEB_DIR / "static"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 class Run(BaseModel):
@@ -44,6 +50,11 @@ def get_connection() -> sqlite3.Connection:
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")
     return con
+
+
+@app.get("/", response_class=FileResponse)
+def serve_index():
+    return WEB_DIR / "index.html"
 
 
 @app.get("/runs", response_model=list[Run])

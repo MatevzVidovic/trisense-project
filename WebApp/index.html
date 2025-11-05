@@ -1,68 +1,36 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8" />
-<title>Object Track</title>
-<style>body{font:14px system-ui;margin:0;display:grid;grid-template-rows:auto 1fr}#ui{padding:8px;border-bottom:1px solid #ddd}canvas{width:100%;height:100%}</style>
-</head>
-<body>
-  <div id="ui">
-    <input id="obj" type="number" placeholder="object_id" />
-    <label>sample <input id="samp" type="number" value="1" min="1" style="width:60px"></label>
-    <button id="load">Load</button>
-    <input id="scrub" type="range" min="0" max="0" value="0" style="width:300px;margin-left:8px">
-    <span id="info"></span>
-  </div>
-  <canvas id="c"></canvas>
-<script>
-const c = document.getElementById('c'), ctx = c.getContext('2d');
-const scrub = document.getElementById('scrub'), info = document.getElementById('info');
-let track=null;
+ <!doctype html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Track Viewer</title>
+    <style>
+      body { margin:0; font:14px/1.4 system-ui; display:grid; grid-template-rows:auto 1fr; height:100vh; color:#222; }
+      #ui { padding:8px 12px; border-bottom:1px solid #ddd; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+      #ui label { display:flex; align-items:center; gap:4px; }
+      canvas { width:100%; height:100%; background:#fafafa; }
+      select, input[type="number"], button { font:inherit; padding:4px 6px; }
+      #status { margin-left:auto; color:#d33; min-width:160px; text-align:right; }
+    </style>
+  </head>
+  <body>
+    <div id="ui">
+      <label>Run
+        <select id="run"></select>
+      </label>
+      <label>Track
+        <select id="track"></select>
+      </label>
+      <label>Sample
+        <input id="sample" type="number" value="1" min="1" style="width:60px">
+      </label>
+      <button id="load">Load</button>
+      <input id="scrub" type="range" min="0" max="0" value="0" style="width:260px">
+      <span id="info"></span>
+      <span id="status"></span>
+    </div>
+    <canvas id="canvas"></canvas>
 
-function resize(){ c.width = c.clientWidth * devicePixelRatio; c.height = c.clientHeight * devicePixelRatio; draw(); }
-addEventListener('resize', resize);
+    <script type="module" src="/static/main.js"></script>
 
-function draw(idx = Number(scrub.value)) {
-  if(!track || track.points.length===0){ ctx.clearRect(0,0,c.width,c.height); return; }
-  const {w:W, h:H} = track.image;
-  const scale = Math.min(c.width/W, c.height/H);
-  const ox = (c.width - W*scale)/2, oy = (c.height - H*scale)/2;
-
-  ctx.clearRect(0,0,c.width,c.height);
-
-  // image bounds
-  ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
-  ctx.strokeRect(ox, oy, W*scale, H*scale);
-
-  // path
-  ctx.lineWidth = 2 * devicePixelRatio; ctx.strokeStyle = '#0a7';
-  ctx.beginPath();
-  track.points.forEach((p,i)=>{
-    const x = ox + p.x*scale, y = oy + p.y*scale;
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-  });
-  ctx.stroke();
-
-  // head marker at idx
-  const p = track.points[idx];
-  if(p){
-    const x = ox + p.x*scale, y = oy + p.y*scale;
-    ctx.fillStyle = '#d33'; ctx.beginPath(); ctx.arc(x,y,4*devicePixelRatio,0,Math.PI*2); ctx.fill();
-    info.textContent = `frame ${p.f} (${Math.round(p.x)}, ${Math.round(p.y)})`;
-  }
-}
-
-async function load(){
-  const id = Number(document.getElementById('obj').value);
-  const sample = Number(document.getElementById('samp').value||1);
-  const res = await fetch(`/objects/${id}/track?sample=${sample}`);
-  track = await res.json();
-  scrub.max = Math.max(0, track.points.length-1); scrub.value = 0;
-  resize(); draw(0);
-}
-document.getElementById('load').onclick = load;
-scrub.oninput = (e)=> draw(Number(e.target.value));
-resize();
-</script>
-</body>
-</html>
+  </body>
+  </html>
