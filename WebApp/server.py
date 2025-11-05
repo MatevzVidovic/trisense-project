@@ -5,12 +5,12 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import sqlite3
-from contextlib import closing
 import os
 from pathlib import Path
+import sqlite3
+from contextlib import closing
 
-DB_PATH = Path(os.getenv("DB_PATH")).resolve()
+DB_PATH = Path(os.getenv("DB_PATH", "DB/db.sqlite3")).resolve()
 
 app = FastAPI()
 
@@ -42,7 +42,6 @@ class Track(BaseModel):
     track_id: int
     image: dict
     points: list[TrackPoint]
-
 
 
 def get_connection() -> sqlite3.Connection:
@@ -161,4 +160,3 @@ def get_track(
             detail=f"Track {track_id} not found for run {run_id}",
         )
     return track
-
