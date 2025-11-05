@@ -97,6 +97,7 @@ async function loadTrackData() {
   setStatus("Loading track…");
   try {
     currentTrack = await fetchTrack(runId, trackId, sample);
+    resizeCanvas(canvas, ctx, currentTrack.image);
     setStatus(
       currentTrack.points.length
         ? `Loaded ${currentTrack.points.length} points`

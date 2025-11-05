@@ -6,10 +6,19 @@ export async function fetchTrack(runId, trackId, sample = 1) {
   return res.json();
 }
 
-export function resizeCanvas(canvas, ctx) {
+export function resizeCanvas(canvas, ctx, frameShape=null) {
   const dpr = window.devicePixelRatio || 1;
+
+  // set correct CSS aspect ratio
+  if (frameShape) {
+    canvas.style.height = `${canvas.clientWidth * (frameShape.h / frameShape.w)}px`;
+    canvas.style.border = canvas.style.border || "4px solid #0d104bff";
+  }
+
+  // set correct pixel buffer shape
   canvas.width = canvas.clientWidth * dpr;
   canvas.height = canvas.clientHeight * dpr;
+
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
