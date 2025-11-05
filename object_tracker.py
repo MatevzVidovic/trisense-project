@@ -99,6 +99,7 @@ def main(_argv):
         out = cv2.VideoWriter(FLAGS.output, codec, fps, (width, height))
 
     frame_num = 0
+    frame_sizes = []
     # while video is running
     while True:
         return_value, frame = vid.read()
@@ -107,6 +108,11 @@ def main(_argv):
             image = Image.fromarray(frame)
         else:
             print('Video has ended or failed, try a different video format!')
+            if len(frame_sizes) > 0:
+                frame_size = frame_sizes[0]
+                are_equal = [frame_size == i for i in frame_sizes]
+                if all(are_equal):
+                    store.log_frame_dims(frame_size["h"], frame_size["w"])
             break
         frame_num +=1
         print('Frame #: ', frame_num)
@@ -208,7 +214,7 @@ def main(_argv):
         tracker.predict()
         tracker.update(detections)
  
-        store.log_frame(frame_num, w=frame.shape[1], h=frame.shape[0])
+        frame_sizes.append({"h" : frame.shape[0], "w" : frame.shape[1]})
         # update tracks
         for track in tracker.tracks:
             if not track.is_confirmed() or track.time_since_update > 1:

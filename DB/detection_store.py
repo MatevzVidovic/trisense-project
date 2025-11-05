@@ -21,30 +21,29 @@ class DetectionStore:
         with self.conn as c:
             cur = c.cursor()
             cur.execute("INSERT INTO runs DEFAULT VALUES;")
-            self.run_id = cur.lastrowid
+            self.run_ix = cur.lastrowid
                 
         self.q = queue.Queue()
         self._stop = object()
         self.t = threading.Thread(target=self._writer, daemon=True)
         self.t.start()
-
-    # --- public API ---
-    def log_frame(self, frame_index, w, h):
-        """Sync insert to get a frame_id immediately."""
-        # Use a short-lived *separate* connection so we don't touch the writer’s connection
+    
+    def log_frame_dims(self, frame_height, frame_width):
         with self.conn as c:
             cur = c.cursor()
-            cur.execute("""INSERT INTO frames(run_id, frame_id, width, height)
-                            VALUES (?, ?, ?, ?)""",
-                        (self.run_id, frame_index, w, h))
-    
-      
+            cur.execute("""UPDATE runs
+                        SET frame_height = ?,
+                            frame_width = ?
+                        WHERE run_ix = ?;
+                        """,
+                        (frame_height, frame_width, self.run_ix))
 
-    def log_detection(self, track_id, frame_id, class_name, conf, xmin, ymin, xmax, ymax):
-        sql = ("""INSERT INTO detections(run_id, track_id, frame_id, class_name, 
+    def log_detection(self, track_ix, frame_ix, class_name, conf, xmin, ymin, xmax, ymax):
+        # Insertion is delayed by being put into a queue.
+        sql = ("""INSERT INTO detections(run_ix, track_ix, frame_ix, class_name, 
                                         confidence, xmin, ymin, xmax, ymax)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""")
-        params = (self.run_id, track_id, frame_id, class_name, conf, xmin, ymin, xmax, ymax)
+        params = (self.run_ix, track_ix, frame_ix, class_name, conf, xmin, ymin, xmax, ymax)
         self.q.put((sql, params))
 
     def close(self):
