@@ -232,7 +232,7 @@ def main(_argv):
 
             # store detection to the DB
             store.log_detection(int(track.track_id), frame_num, class_name,
-                                        class_confidence, int(bbox[2]), int(bbox[0]), int(bbox[3]), int(bbox[1]))
+                                        class_confidence, xmin=int(bbox[0]), ymin=int(bbox[1]), xmax=int(bbox[2]), ymax=int(bbox[3]))
 
         # if enable info flag then print details about each track
             if FLAGS.info:

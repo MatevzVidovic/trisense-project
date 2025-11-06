@@ -85,7 +85,7 @@ export function drawTrack(ctx, canvas, track, frameIndex, updateInfo) {
     ctx.fill();
 
     updateInfo?.(
-      `run ${track.run_id} · track ${track.track_id} · frame ${point.frame_id} · center (${Math.round(cx)}, ${Math.round(cy)})`,
+      `run ${track.run_ix} · track ${track.track_ix} · frame ${point.frame_ix} · center (${Math.round(cx)}, ${Math.round(cy)})`,
     );
   }
 
