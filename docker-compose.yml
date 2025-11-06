@@ -6,7 +6,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: docker/Dockerfile.cpu
+      dockerfile: .docker/Dockerfile.cpu
       args:
         ENV_NAME: myenv        # keep in sync with conda-gpu.yml 'name:'
     image: myproject:cuda10-conda-myenv

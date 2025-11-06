@@ -1,6 +1,59 @@
 
 # Novel project adaptation
 
+
+## Instructions
+
+### Structure
+
+We are running the project from WSL2 using docker - by using docker in OS the project should work, but the live display of detections might not.
+
+The project is made of 2 parts:
+- the object detection and data collection in the root directory
+
+(using the conda-cpu.yml conda env, and ./Makefile, ./docker-compose.yml, ./.docker/, ./DB/).
+- the web display in the WebApp/ directory 
+
+(using the ./.conda/environment.yml as the conda env, and ./WebApp/Makefile, ./WebApp/docker-compose.yml/, ./WebApp/.docker/, and creating a hard lint to ./DB/db.sqlite3 to use it)
+
+### Commands
+
+#### Object detection
+
+We first need to run project detection to populate the DB.
+
+##### If using WSL2 or Linux: 
+From root, run: make up
+The container runs bash.
+In the container run this command:
+python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true
+We are utilizing WSLg for the display.
+If using Linux, you might get error:
+: cannot connect to X server
+So try using this command instead (disabling the display feature):
+python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true --dont_show
+
+If still experiencing errors, perhaps try removing this line in Dockerfile.cpu:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+
+##### If using Windows:
+From root, run:	docker compose run --rm app 
+In the container bash, run: python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true --dont_show
+You will not get the display.
+If still experiencing errors, perhaps try removing this line in Dockerfile.cpu:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+
+
+#### Webapp
+
+- Move into WebApp/
+- When running the first time, run: 	ln ../DB/db.sqlite3 db.sqlite3    # this creates a hard link to db.sqlite3, so docker can use it (cannot copy or mount parent dirs)
+
+- If WSL or Linux, run: m up    # this deletes the old hard link and creates a new one (if you had deleted the sqlite file to reset in the meantime), and runs the docker container
+- If Windows, run: docker compose  up --build
+
+- access the web UI on localhost:8000
+
 ## Commands
 
 conda env update -f conda-gpu.yml
@@ -14,7 +67,7 @@ python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.a
 ## Limitations
 
 - We use the tiny YOLOv4 model, as the weights for the full model are not available anymore.
-- The required CUDA toolkit (10.01) works with older graphics cards- we therefore cannot use the GPU approach.
+- The required CUDA toolkit (10.01) works with older graphics cards - we therefore cannot use the GPU approach.
 - We use tensorflow==2.3.1 instead of tensorflow==2.3.0rc0, as the latter is not available via PyPy anymore.
 - We add scipy to the dependencies, as it must have been ommited by mistake in the original project.
 

@@ -8,7 +8,5 @@ services:
     container_name: fastapi-webapp
     ports:
       - "8000:8000"
-    volumes:
-      - ./DB:/app/DB
     environment:
       - DB_PATH=db.sqlite3
