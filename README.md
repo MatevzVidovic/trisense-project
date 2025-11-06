@@ -22,23 +22,32 @@ The project is made of 2 parts:
 
 We first need to run project detection to populate the DB.
 
+Download the weights and put them into the data/ dir:
+https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights
+
+
 ##### If using WSL2 or Linux: 
 From root, run: make up
 The container runs bash.
 In the container run this command:
-python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true
+python save_model.py --weights ./data/yolov4-tiny.weights --output ./checkpoints/yolov4-tiny-416 --model yolov4 --tiny
+Then run:
+python object_tracker.py --weights ./checkpoints/yolov4-tiny-416 --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny
 We are utilizing WSLg for the display.
 If using Linux, you might get error:
 : cannot connect to X server
 So try using this command instead (disabling the display feature):
-python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true --dont_show
+python object_tracker.py --weights ./checkpoints/yolov4-tiny-416 --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny --dont_show
 
 If still experiencing errors, perhaps try removing this line in Dockerfile.cpu:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
 
 ##### If using Windows:
 From root, run:	docker compose run --rm app 
-In the container bash, run: python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true --dont_show
+In the container run this command:
+python save_model.py --weights ./data/yolov4-tiny.weights --output ./checkpoints/yolov4-tiny-416 --model yolov4 --tiny
+Then run:
+python object_tracker.py --weights ./checkpoints/yolov4-tiny-416 --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny --dont_show
 You will not get the display.
 If still experiencing errors, perhaps try removing this line in Dockerfile.cpu:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -47,22 +56,15 @@ If still experiencing errors, perhaps try removing this line in Dockerfile.cpu:
 #### Webapp
 
 - Move into WebApp/
-- When running the first time, run: 	ln ../DB/db.sqlite3 db.sqlite3    # this creates a hard link to db.sqlite3, so docker can use it (cannot copy or mount parent dirs)
+- If WSL or Linux:
+When running the first time, run: 	ln ../DB/db.sqlite3 db.sqlite3    # this creates a hard link to db.sqlite3, so docker can use it (cannot copy or mount parent dirs)
+Run: make up    # this deletes the old hard link and creates a new one (if you had deleted the sqlite file to reset in the meantime), and runs the docker container
 
-- If WSL or Linux, run: m up    # this deletes the old hard link and creates a new one (if you had deleted the sqlite file to reset in the meantime), and runs the docker container
-- If Windows, run: docker compose  up --build
+- If Windows Powershell:
+Make the hard link:    New-Item -ItemType HardLink -Path db.sqlite3 -Target ../DB/db.sqlite3
+run: docker compose  up --build
 
 - access the web UI on localhost:8000
-
-## Commands
-
-conda env update -f conda-gpu.yml
-
-conda activate yolov4-gpu
-
-python save_model.py --weights ./data/yolov4-tiny.weights --model yolov4 --tiny true
-
-python object_tracker.py --video ./data/video/cars.mp4 --output ./outputs/cars.avi --model yolov4 --tiny true
 
 ## Limitations
 

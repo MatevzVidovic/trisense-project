@@ -4,6 +4,7 @@ yolov4-tiny.weights
 checkpoints/
 outputs/
 **/node_modules
+**/.vscode/
 
 # SQLite databases
 *.sqlite3
